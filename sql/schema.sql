@@ -1,3 +1,4 @@
+SET NAMES utf8mb4;
 -- ============================================================
 -- Sistema de Gestión de Inventario
 -- Módulo: Gestión de usuarios por privilegios (roles)

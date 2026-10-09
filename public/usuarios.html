@@ -4,91 +4,14 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Usuarios · Sistema de Gestión de Inventario</title>
-  <style>
-    :root {
-      --tinta: #17202a;
-      --tinta-suave: #5b6875;
-      --linea: #d8dee5;
-      --fondo: #f2f4f7;
-      --superficie: #ffffff;
-      --acento: #0f5c4c;
-      --acento-claro: #e6f1ee;
-      --alerta: #a4262c;
-      --exito: #1f7a4d;
-    }
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      font-family: "Segoe UI", Roboto, -apple-system, system-ui, sans-serif;
-      background: var(--fondo);
-      color: var(--tinta);
-      line-height: 1.5;
-    }
-    header {
-      background: var(--tinta);
-      color: #fff;
-      padding: 1rem 1.5rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: .5rem;
-    }
-    header h1 { font-size: 1rem; font-weight: 600; margin: 0; letter-spacing: .02em; }
-    header span { font-size: .8rem; color: #b8c2cc; }
-    main {
-      max-width: 1040px;
-      margin: 0 auto;
-      padding: 1.5rem;
-      display: grid;
-      gap: 1.5rem;
-      grid-template-columns: minmax(320px, 420px) 1fr;
-    }
-    @media (max-width: 860px) { main { grid-template-columns: 1fr; } }
-    section {
-      background: var(--superficie);
-      border: 1px solid var(--linea);
-      border-radius: 6px;
-      padding: 1.25rem;
-    }
-    h2 { font-size: .95rem; text-transform: uppercase; letter-spacing: .06em;
-         color: var(--tinta-suave); margin: 0 0 1rem; }
-    label { display: block; font-size: .85rem; font-weight: 600; margin-bottom: .3rem; }
-    input, select {
-      width: 100%; padding: .55rem .65rem; margin-bottom: .9rem;
-      border: 1px solid var(--linea); border-radius: 4px;
-      font: inherit; font-size: .9rem; background: #fff; color: var(--tinta);
-    }
-    input:focus, select:focus { outline: 2px solid var(--acento); outline-offset: 1px; border-color: var(--acento); }
-    .ayuda { font-size: .78rem; color: var(--tinta-suave); margin: -.6rem 0 .9rem; }
-    button {
-      width: 100%; padding: .65rem; border: none; border-radius: 4px;
-      background: var(--acento); color: #fff; font: inherit; font-weight: 600;
-      cursor: pointer;
-    }
-    button:hover { background: #0c4a3d; }
-    button:disabled { background: #9aa6b1; cursor: not-allowed; }
-    #privilegios {
-      background: var(--acento-claro); border-left: 3px solid var(--acento);
-      padding: .7rem .9rem; margin-bottom: 1rem; font-size: .82rem; border-radius: 0 4px 4px 0;
-    }
-    #privilegios ul { margin: .4rem 0 0; padding-left: 1.1rem; }
-    #mensaje { font-size: .85rem; padding: .6rem .8rem; border-radius: 4px; margin-bottom: 1rem; display: none; }
-    #mensaje.error { display: block; background: #fbeaea; color: var(--alerta); }
-    #mensaje.exito { display: block; background: #e8f5ee; color: var(--exito); }
-    table { width: 100%; border-collapse: collapse; font-size: .85rem; }
-    th, td { text-align: left; padding: .5rem .4rem; border-bottom: 1px solid var(--linea); }
-    th { font-size: .75rem; text-transform: uppercase; letter-spacing: .05em; color: var(--tinta-suave); }
-    .etiqueta { display: inline-block; padding: .1rem .5rem; border-radius: 10px;
-                background: var(--acento-claro); color: var(--acento); font-size: .75rem; font-weight: 600; }
-    .vacio { color: var(--tinta-suave); font-size: .85rem; }
-  </style>
+  <link rel="stylesheet" href="css/estilos.css" />
 </head>
 <body>
   <header>
     <h1>Sistema de Gestión de Inventario · Administración de usuarios</h1>
     <span id="sesion">Sesión no iniciada</span>
   </header>
+  <nav id="menu"></nav>
 
   <main>
     <section>
@@ -126,6 +49,7 @@
     </section>
   </main>
 
+  <script src="js/comun.js"></script>
   <script src="js/usuarios.js"></script>
 </body>
 </html>

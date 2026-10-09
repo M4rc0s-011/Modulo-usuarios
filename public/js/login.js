@@ -14,7 +14,7 @@ document.getElementById('btnEntrar').addEventListener('click', async () => {
     if (!respuesta.ok) throw new Error(cuerpo.error || 'No fue posible iniciar sesión');
     localStorage.setItem('token', cuerpo.data.token);
     localStorage.setItem('usuario', JSON.stringify(cuerpo.data.usuario));
-    window.location.href = 'usuarios.html';
+    window.location.href = 'index.html';
   } catch (e) {
     error.textContent = e.message;
     error.style.display = 'block';

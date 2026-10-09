@@ -77,6 +77,64 @@ export const usuarioRepository = {
     }
   },
 
+  async actualizar(id, { nombre, email, rolId }, actorId) {
+    const conexion = await pool.getConnection();
+    try {
+      await conexion.beginTransaction();
+      await conexion.execute(
+        'UPDATE usuarios SET nombre = ?, email = ?, rol_id = ? WHERE id = ?',
+        [nombre, email, rolId, id]
+      );
+      await conexion.execute(
+        `INSERT INTO auditoria (usuario_id, accion, entidad, entidad_id, detalle)
+         VALUES (?, 'EDITAR_USUARIO', 'usuarios', ?, ?)`,
+        [actorId ?? null, String(id), `Datos: ${email}, rol_id ${rolId}`]
+      );
+      await conexion.commit();
+    } catch (error) {
+      await conexion.rollback();
+      throw error;
+    } finally {
+      conexion.release();
+    }
+  },
+
+  async cambiarEstado(id, activo, actorId) {
+    const conexion = await pool.getConnection();
+    try {
+      await conexion.beginTransaction();
+      await conexion.execute('UPDATE usuarios SET activo = ? WHERE id = ?', [activo ? 1 : 0, id]);
+      await conexion.execute(
+        `INSERT INTO auditoria (usuario_id, accion, entidad, entidad_id, detalle)
+         VALUES (?, ?, 'usuarios', ?, NULL)`,
+        [actorId ?? null, activo ? 'ACTIVAR_USUARIO' : 'DESACTIVAR_USUARIO', String(id)]
+      );
+      await conexion.commit();
+    } catch (error) {
+      await conexion.rollback();
+      throw error;
+    } finally {
+      conexion.release();
+    }
+  },
+
+  async contarAdministradoresActivos() {
+    const [filas] = await pool.execute(
+      `SELECT COUNT(*) AS total FROM usuarios u JOIN roles r ON r.id = u.rol_id
+        WHERE r.nombre = 'administrador' AND u.activo = 1`
+    );
+    return Number(filas[0].total);
+  },
+
+  async hashDePassword(id) {
+    const [filas] = await pool.execute('SELECT password_hash FROM usuarios WHERE id = ?', [id]);
+    return filas[0]?.password_hash || null;
+  },
+
+  async actualizarPassword(id, passwordHash) {
+    await pool.execute('UPDATE usuarios SET password_hash = ? WHERE id = ?', [passwordHash, id]);
+  },
+
   async permisosDeUsuario(usuarioId) {
     const [filas] = await pool.execute(
       `SELECT p.clave

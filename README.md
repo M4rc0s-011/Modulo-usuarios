@@ -1,78 +1,94 @@
-# Módulo de gestión de usuarios por privilegios
+# Sistema de Gestión de Inventario
 
-Sistema de Gestión de Inventario — Ingeniería de Software II, UAPA
-Unidad 2: arquitectura de aplicaciones aplicada a un módulo funcional.
+Proyecto final de **Ingeniería de Software II** — UAPA.
 
-## Arquitectura implementada
+Aplicación web cliente-servidor de tres capas para controlar productos, existencias
+y movimientos de inventario, con control de acceso por roles y privilegios.
 
-Arquitectura **cliente-servidor de tres capas con organización interna en capas
-(layered / n-tier)**, la misma definida en la Unidad 1:
+**Equipo**
+
+| Integrante | Rol Scrum | Módulo |
+|---|---|---|
+| Marcos Xavier Rodríguez Santana | Scrum Master / Developer | Gestión de usuarios y privilegios, base técnica |
+| Juan Manuel Peña | Product Owner / Developer | Productos, alertas de stock bajo |
+| Héctor Andrés Recio Pérez | Developer / QA | Movimientos de inventario, auditoría, pruebas de integración |
+
+## Módulos
+
+1. **Usuarios y privilegios**: inicio de sesión con JWT, roles (administrador, supervisor, empleado), permisos por rol, alta, edición y desactivación de cuentas.
+2. **Productos**: catálogo con categorías, búsqueda, registro, desactivación y alerta de stock bajo.
+3. **Movimientos de inventario**: ingresos y retiros. El stock nunca queda negativo (transacción con bloqueo de fila).
+4. **Auditoría**: registro de las acciones importantes, que solo consulta el administrador.
+
+## Arquitectura
 
 ```
 CLIENTE WEB              public/            HTML + CSS + JS (presentación)
         │  HTTP/JSON
-SERVIDOR DE APLICACIÓN   src/routes/        define rutas y privilegios exigidos
+SERVIDOR DE APLICACIÓN   src/routes/        rutas y privilegio exigido
                          src/middlewares/   autenticación y autorización
                          src/validators/    validación de entradas
                          src/controllers/   traduce HTTP ↔ negocio
                          src/services/      reglas de negocio (Service Layer)
                          src/repositories/  acceso a datos (Repository)
         │  SQL preparado
-BASE DE DATOS            sql/schema.sql     MySQL 8
+BASE DE DATOS            sql/               MySQL 8
 ```
 
-Regla de dependencia: cada capa solo llama a la que tiene debajo. Los
-controladores no escriben SQL y los repositorios no conocen HTTP.
-
-## Requisitos
-
-- Node.js 18 o superior
-- MySQL 8.x
+Regla de dependencia: cada capa solo llama a la que tiene debajo.
 
 ## Instalación
 
+Requisitos: Node.js 20 o superior y MySQL 8.
+
 ```bash
 npm install
-cp .env.example .env        # editar credenciales y JWT_SECRET
+cp .env.example .env          # editar DB_PASSWORD y JWT_SECRET
 mysql -u root -p < sql/schema.sql
+mysql -u root -p < sql/02_inventario.sql
 npm start
 ```
 
-Abrir `http://localhost:3000/login.html`.
-
-## Credenciales iniciales
-
-| Correo | Contraseña | Rol |
-|---|---|---|
-| admin@inventario.do | Admin123* | administrador |
-
-Cambiar la contraseña después de la primera prueba.
+Abrir `http://localhost:3000/login.html` · Usuario inicial: `admin@inventario.do` / `Admin123*`
 
 ## Roles y privilegios
 
-| Rol | Crear usuarios | Productos | Ingresos / retiros | Reportes |
-|---|---|---|---|---|
-| administrador | Sí | Sí | Sí | Sí |
-| supervisor | No | Sí | Sí | Sí |
-| empleado | No | Solo consulta | Solo ingresos | No |
+| Permiso | Administrador | Supervisor | Empleado |
+|---|---|---|---|
+| Gestionar usuarios | ✔ | | |
+| Consultar productos | ✔ | ✔ | ✔ |
+| Registrar / desactivar productos | ✔ | ✔ | |
+| Registrar ingresos | ✔ | ✔ | ✔ |
+| Registrar retiros | ✔ | ✔ | |
+| Ver alertas de stock bajo | ✔ | ✔ | |
+| Consultar auditoría | ✔ | | |
 
 ## Endpoints
 
-| Método | Ruta | Privilegio exigido |
+| Método | Ruta | Permiso |
 |---|---|---|
-| POST | `/api/auth/login` | Público (limitado a 10 intentos / 15 min) |
+| POST | `/api/auth/login` | Público (10 intentos / 15 min) |
 | GET | `/api/auth/perfil` | Token válido |
-| GET | `/api/roles` | Rol `administrador` |
-| GET | `/api/usuarios` | Permiso `usuarios.listar` |
-| POST | `/api/usuarios` | Rol `administrador` + permiso `usuarios.crear` |
+| PUT | `/api/auth/password` | Token válido |
+| GET | `/api/roles` | Rol administrador |
+| GET | `/api/usuarios` | `usuarios.listar` |
+| POST | `/api/usuarios` | Rol administrador + `usuarios.crear` |
+| PUT | `/api/usuarios/:id` | `usuarios.editar` |
+| PATCH | `/api/usuarios/:id/estado` | `usuarios.editar` |
+| GET | `/api/categorias` | `productos.listar` |
+| GET | `/api/productos` · `/api/productos/:id` | `productos.listar` |
+| POST | `/api/productos` | `productos.crear` |
+| PUT · PATCH | `/api/productos/:id` · `/api/productos/:id/estado` | `productos.editar` |
+| GET | `/api/reportes/stock-bajo` | `reportes.ver` |
+| POST | `/api/movimientos/ingreso` | `inventario.ingreso` |
+| POST | `/api/movimientos/retiro` | `inventario.retiro` |
+| GET | `/api/movimientos` | `inventario.ingreso` o `inventario.retiro` |
+| GET | `/api/auditoria` | `auditoria.ver` |
 
-## Prueba de la restricción por privilegios
+## Pruebas
 
-1. Iniciar sesión como administrador y crear un usuario con rol `empleado`.
-2. Cerrar sesión (borrar `localStorage`) e iniciar con ese empleado.
-3. Intentar `POST /api/usuarios` con su token: el servidor responde
-   **403 Forbidden**, aunque la petición se envíe directamente desde consola
-   o desde una herramienta como Postman, sin pasar por la interfaz.
+```bash
+npm test
+```
 
-Ese es el punto de la práctica: la autorización vive en el servidor, no en el
-navegador.
+Son 23 pruebas automatizadas, entre funcionales y de aceptación (`node:test` + supertest), sobre la base de datos local. Crean sus propios datos de prueba. Antes de una demostración, se recrea la BD con los dos scripts SQL.

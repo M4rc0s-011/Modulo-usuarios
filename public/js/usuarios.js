@@ -4,11 +4,7 @@
  * se toma aquí. Ocultar un botón en el navegador no protege nada; la
  * autorización real ocurre siempre en el servidor.
  */
-const API = '/api';
-const token = localStorage.getItem('token');
-const usuarioActual = JSON.parse(localStorage.getItem('usuario') || 'null');
-
-const $ = (id) => document.getElementById(id);
+// API, token, usuarioActual, $, peticion, mostrarMensaje y escaparHTML vienen de comun.js
 
 const PRIVILEGIOS_POR_ROL = {
   administrador: ['Gestión completa de usuarios y roles', 'Alta y edición de productos',
@@ -16,29 +12,6 @@ const PRIVILEGIOS_POR_ROL = {
   supervisor:    ['Alta y edición de productos', 'Ingresos y retiros de inventario', 'Reportes'],
   empleado:      ['Consulta del catálogo de productos', 'Registro de ingresos'],
 };
-
-function mostrarMensaje(texto, tipo) {
-  const caja = $('mensaje');
-  caja.textContent = texto;
-  caja.className = tipo;
-}
-
-async function peticion(ruta, opciones = {}) {
-  const respuesta = await fetch(API + ruta, {
-    ...opciones,
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-      ...(opciones.headers || {}),
-    },
-  });
-  const cuerpo = await respuesta.json();
-  if (!respuesta.ok) {
-    const detalle = cuerpo.detalles?.map((d) => d.mensaje).join('. ');
-    throw new Error(detalle || cuerpo.error || 'Error inesperado');
-  }
-  return cuerpo.data;
-}
 
 async function cargarRoles() {
   const select = $('rolId');
@@ -70,7 +43,7 @@ function mostrarPrivilegios() {
   }
   const lista = PRIVILEGIOS_POR_ROL[nombre] || [];
   caja.innerHTML =
-    `<strong>${opcion.dataset.descripcion || nombre}</strong>` +
+    `<strong>${escaparHTML(opcion.dataset.descripcion || nombre)}</strong>` +
     `<ul>${lista.map((p) => `<li>${p}</li>`).join('')}</ul>`;
 }
 
@@ -84,14 +57,14 @@ async function cargarUsuarios() {
     }
     cuerpo.innerHTML = usuarios
       .map((u) => `<tr>
-          <td>${u.nombre}</td>
-          <td>${u.email}</td>
-          <td><span class="etiqueta">${u.rol}</span></td>
+          <td>${escaparHTML(u.nombre)}</td>
+          <td>${escaparHTML(u.email)}</td>
+          <td><span class="etiqueta">${escaparHTML(u.rol)}</span></td>
           <td>${u.activo ? 'Activo' : 'Inactivo'}</td>
         </tr>`)
       .join('');
   } catch (error) {
-    cuerpo.innerHTML = `<tr><td colspan="4" class="vacio">${error.message}</td></tr>`;
+    cuerpo.innerHTML = `<tr><td colspan="4" class="vacio">${escaparHTML(error.message)}</td></tr>`;
   }
 }
 
@@ -122,11 +95,8 @@ async function crearUsuario() {
   }
 }
 
-// --- Arranque ---
-if (!token) {
-  window.location.href = 'login.html';
-} else {
-  $('sesion').textContent = `${usuarioActual?.nombre || ''} · ${usuarioActual?.rol || ''}`;
+// --- Arranque (la verificación del token y el menú los hace comun.js) ---
+if (token) {
   $('rolId').addEventListener('change', mostrarPrivilegios);
   $('btnCrear').addEventListener('click', crearUsuario);
   cargarRoles();

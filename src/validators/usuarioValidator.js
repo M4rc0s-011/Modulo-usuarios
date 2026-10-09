@@ -13,7 +13,7 @@ export const reglasCrearUsuario = [
     .trim()
     .isEmail()
     .withMessage('Debe proporcionar un correo electrónico válido')
-    .normalizeEmail(),
+    .toLowerCase(),
   body('password')
     .isLength({ min: 8, max: 64 })
     .withMessage('La contraseña debe tener al menos 8 caracteres')
@@ -24,6 +24,25 @@ export const reglasCrearUsuario = [
   body('rolId')
     .isInt({ min: 1 })
     .withMessage('Debe seleccionar un rol válido'),
+];
+
+export const reglasEditarUsuario = [
+  body('nombre').trim().isLength({ min: 3, max: 120 })
+    .withMessage('El nombre debe tener entre 3 y 120 caracteres'),
+  body('email').trim().isEmail().withMessage('Debe proporcionar un correo electrónico válido').toLowerCase(),
+  body('rolId').isInt({ min: 1 }).withMessage('Debe seleccionar un rol válido').toInt(),
+];
+
+export const reglasEstadoUsuario = [
+  body('activo').isBoolean().withMessage('activo debe ser true o false').toBoolean(),
+];
+
+export const reglasCambiarPassword = [
+  body('actual').notEmpty().withMessage('Indique su contraseña actual'),
+  body('nueva')
+    .isLength({ min: 8, max: 64 }).withMessage('La contraseña debe tener al menos 8 caracteres')
+    .matches(/[A-Z]/).withMessage('La contraseña debe incluir al menos una letra mayúscula')
+    .matches(/[0-9]/).withMessage('La contraseña debe incluir al menos un número'),
 ];
 
 export const reglasLogin = [

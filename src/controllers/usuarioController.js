@@ -41,4 +41,32 @@ export const usuarioController = {
       next(error);
     }
   },
+
+  async editar(req, res, next) {
+    try {
+      const { nombre, email, rolId } = req.body;
+      const data = await usuarioService.editarUsuario(Number(req.params.id), { nombre, email, rolId }, req.usuario.id);
+      res.json({ ok: true, data });
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  async cambiarEstado(req, res, next) {
+    try {
+      const data = await usuarioService.cambiarEstado(Number(req.params.id), req.body.activo, req.usuario.id);
+      res.json({ ok: true, data });
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  async cambiarPassword(req, res, next) {
+    try {
+      await usuarioService.cambiarPassword(req.usuario.id, req.body.actual, req.body.nueva);
+      res.json({ ok: true, data: { mensaje: 'Contraseña actualizada' } });
+    } catch (error) {
+      next(error);
+    }
+  },
 };

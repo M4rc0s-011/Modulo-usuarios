@@ -37,12 +37,16 @@ export function exigirRol(...rolesPermitidos) {
   };
 }
 
-/** Control más fino: exige un permiso concreto. Ej: exigirPermiso('usuarios.crear') */
-export function exigirPermiso(permiso) {
+/**
+ * Control más fino: exige al menos UNO de los permisos indicados.
+ * Ej: exigirPermiso('usuarios.crear')
+ *     exigirPermiso('inventario.ingreso', 'inventario.retiro')  -> basta con uno
+ */
+export function exigirPermiso(...permisosRequeridos) {
   return (req, res, next) => {
     const permisos = req.usuario?.permisos || [];
-    if (!permisos.includes(permiso)) {
-      return res.status(403).json({ ok: false, error: `Permiso requerido: ${permiso}` });
+    if (!permisosRequeridos.some((p) => permisos.includes(p))) {
+      return res.status(403).json({ ok: false, error: `Permiso requerido: ${permisosRequeridos.join(' o ')}` });
     }
     next();
   };

@@ -6,15 +6,11 @@
 import bcrypt from 'bcryptjs';
 import { usuarioRepository } from '../repositories/usuarioRepository.js';
 import { rolRepository } from '../repositories/rolRepository.js';
+import { ErrorDeNegocio } from '../utils/ErrorDeNegocio.js';
 
 const COSTO_BCRYPT = 10;
 
-export class ErrorDeNegocio extends Error {
-  constructor(mensaje, estado = 400) {
-    super(mensaje);
-    this.estado = estado;
-  }
-}
+export { ErrorDeNegocio };
 
 export const usuarioService = {
   async listarRoles() {
@@ -52,7 +48,49 @@ export const usuarioService = {
       creadoPor,
     });
 
-    return { id, nombre, email: correo, rol: rol.nombre };
+    return { id, nombre: String(nombre).trim(), email: correo, rol: rol.nombre };
+  },
+
+  /** Regla: no puede quedar el sistema sin ningún administrador activo. */
+  async editarUsuario(id, { nombre, email, rolId }, actorId) {
+    const usuario = await usuarioRepository.buscarPorId(id);
+    if (!usuario) throw new ErrorDeNegocio('Usuario no encontrado', 404);
+
+    const correo = String(email).trim().toLowerCase();
+    const otro = await usuarioRepository.buscarPorEmail(correo);
+    if (otro && otro.id !== id) throw new ErrorDeNegocio('Ese correo ya pertenece a otro usuario', 409);
+
+    const rol = await rolRepository.buscarPorId(rolId);
+    if (!rol) throw new ErrorDeNegocio('El rol indicado no existe o está inactivo', 422);
+
+    const dejaDeSerAdmin = usuario.rol === 'administrador' && rol.nombre !== 'administrador';
+    if (dejaDeSerAdmin && usuario.activo && (await usuarioRepository.contarAdministradoresActivos()) <= 1) {
+      throw new ErrorDeNegocio('No se puede quitar el rol al último administrador activo', 422);
+    }
+
+    await usuarioRepository.actualizar(id, { nombre: String(nombre).trim(), email: correo, rolId: rol.id }, actorId);
+    return usuarioRepository.buscarPorId(id);
+  },
+
+  /** Reglas: nadie se desactiva a sí mismo ni desactiva al último administrador. */
+  async cambiarEstado(id, activo, actorId) {
+    if (id === actorId && !activo) throw new ErrorDeNegocio('No puede desactivar su propia cuenta', 422);
+    const usuario = await usuarioRepository.buscarPorId(id);
+    if (!usuario) throw new ErrorDeNegocio('Usuario no encontrado', 404);
+    if (!activo && usuario.rol === 'administrador' && usuario.activo
+        && (await usuarioRepository.contarAdministradoresActivos()) <= 1) {
+      throw new ErrorDeNegocio('No se puede desactivar al último administrador activo', 422);
+    }
+    await usuarioRepository.cambiarEstado(id, activo, actorId);
+    return usuarioRepository.buscarPorId(id);
+  },
+
+  async cambiarPassword(id, actual, nueva) {
+    const hash = await usuarioRepository.hashDePassword(id);
+    if (!hash || !(await bcrypt.compare(actual, hash))) {
+      throw new ErrorDeNegocio('La contraseña actual no es correcta', 422);
+    }
+    await usuarioRepository.actualizarPassword(id, await bcrypt.hash(nueva, COSTO_BCRYPT));
   },
 
   /** Valida credenciales para el inicio de sesión (RF-01). */
