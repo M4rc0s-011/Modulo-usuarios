@@ -8,15 +8,23 @@
 </head>
 <body>
   <header>
-    <h1>Sistema de Gestión de Inventario · Panel principal</h1>
+    <h1>Sistema de Gestión de Inventario · Inicio</h1>
     <span id="sesion">Sesión no iniciada</span>
   </header>
   <nav id="menu"></nav>
 
   <main class="ancho">
     <section>
-      <h2>Panel principal</h2>
-      <p class="vacio">Pendiente de implementar (Juan Manuel).</p>
+      <h2 id="saludo">Bienvenido</h2>
+      <p class="vacio">Use el menú superior para acceder a los módulos permitidos para su rol.</p>
+    </section>
+
+    <section id="seccionAlertas" class="oculto">
+      <h2>Productos en stock bajo</h2>
+      <table>
+        <thead><tr><th>Código</th><th>Producto</th><th>Categoría</th><th>Stock</th><th>Mínimo</th><th>Faltante</th></tr></thead>
+        <tbody id="tablaAlertas"><tr><td colspan="6" class="vacio">Cargando…</td></tr></tbody>
+      </table>
     </section>
   </main>
 
