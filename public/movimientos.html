@@ -13,10 +13,35 @@
   </header>
   <nav id="menu"></nav>
 
-  <main class="ancho">
+  <main>
     <section>
-      <h2>Movimientos de inventario</h2>
-      <p class="vacio">Pendiente de implementar (Héctor).</p>
+      <h2>Registrar movimiento</h2>
+      <div id="mensaje" role="status" aria-live="polite"></div>
+
+      <label for="productoId">Producto</label>
+      <select id="productoId"><option value="">Cargando…</option></select>
+      <p class="ayuda" id="infoStock">Seleccione un producto para ver su existencia.</p>
+
+      <label for="tipo">Tipo de movimiento</label>
+      <select id="tipo"></select>
+
+      <label for="cantidad">Cantidad</label>
+      <input id="cantidad" type="number" min="1" step="1" value="1" />
+
+      <label for="motivo">Motivo (opcional)</label>
+      <input id="motivo" type="text" maxlength="255" placeholder="Ej.: Compra a proveedor, despacho a producción" />
+
+      <button id="btnRegistrar" type="button">Registrar</button>
+    </section>
+
+    <section>
+      <h2>Historial reciente</h2>
+      <table>
+        <thead>
+          <tr><th>Fecha</th><th>Producto</th><th>Tipo</th><th>Cant.</th><th>Stock final</th><th>Usuario</th></tr>
+        </thead>
+        <tbody id="tablaMovimientos"><tr><td colspan="6" class="vacio">Cargando…</td></tr></tbody>
+      </table>
     </section>
   </main>
 
